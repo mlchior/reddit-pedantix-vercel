@@ -93,11 +93,14 @@ reddit-pedantix-vercel/
 
 ### Gestion CORS
 
-L'application utilise plusieurs stratégies pour contourner les restrictions CORS :
+L'application utilise plusieurs stratégies pour récupérer de vrais posts Reddit :
 
-1. **Appel direct** à l'API Reddit (peut échouer)
-2. **Proxy CORS** via `api.allorigins.win`
-3. **Posts de fallback** si tout échoue
+1. **🚀 Fonction serverless Vercel** (`/api/reddit`) - Solution principale (contourne CORS côté serveur)
+2. **Appel direct** à l'API Reddit (peut échouer à cause de CORS)
+3. **Proxies CORS** multiples avec fallback automatique
+4. **Posts de démonstration** en dernier recours
+
+**La fonction serverless garantit l'accès aux vrais posts Reddit même en production !**
 
 ### Système de scoring
 

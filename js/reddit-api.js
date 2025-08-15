@@ -37,6 +37,17 @@ class RedditAPI {
         console.log('🔍 Recherche d\'un post Reddit français...');
         
         try {
+            // Tentative via fonction serverless Vercel (priorité)
+            const post = await this.fetchViaServerless();
+            if (post) {
+                console.log('✅ Post Reddit récupéré via serverless');
+                return post;
+            }
+        } catch (error) {
+            console.warn('⚠️ Erreur fonction serverless:', error.message);
+        }
+
+        try {
             // Tentative d'appel direct à l'API Reddit
             const post = await this.fetchFromRedditAPI();
             if (post) {
@@ -61,6 +72,45 @@ class RedditAPI {
         // Fallback: utiliser un post pré-défini
         console.log('🔄 Utilisation d\'un post de fallback');
         return this.getFallbackPost();
+    }
+
+    /**
+     * Appel via fonction serverless Vercel (solution optimale)
+     * @returns {Promise<Object|null>}
+     */
+    async fetchViaServerless() {
+        const subreddit = this.frenchSubreddits[Math.floor(Math.random() * this.frenchSubreddits.length)];
+        
+        // Déterminer l'URL de base (local vs déployé)
+        const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? window.location.origin
+            : window.location.origin;
+            
+        const apiUrl = `${baseUrl}/api/reddit?subreddit=${subreddit}`;
+        
+        console.log(`🔄 Appel serverless: ${apiUrl}`);
+
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('Aucun post français trouvé dans ce subreddit');
+            }
+            throw new Error(`Serverless API error: ${response.status}`);
+        }
+
+        const post = await response.json();
+        
+        if (post.fallback) {
+            throw new Error('Fonction serverless en mode fallback');
+        }
+
+        return post;
     }
 
     /**
@@ -91,18 +141,45 @@ class RedditAPI {
      */
     async fetchViaProxy() {
         const subreddit = this.frenchSubreddits[Math.floor(Math.random() * this.frenchSubreddits.length)];
+        const redditUrl = `https://www.reddit.com/r/${subreddit}/hot.json?limit=25`;
         
-        // Utilisation d'un proxy CORS public
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://www.reddit.com/r/${subreddit}/hot.json?limit=25`)}`;
+        // Liste de proxies CORS à essayer
+        const proxies = [
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(redditUrl)}`,
+            `https://cors-anywhere.herokuapp.com/${redditUrl}`,
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(redditUrl)}`,
+            `https://thingproxy.freeboard.io/fetch/${redditUrl}`
+        ];
 
-        const response = await fetch(proxyUrl);
+        for (const proxyUrl of proxies) {
+            try {
+                console.log(`🔄 Tentative avec proxy: ${proxyUrl.split('/')[2]}`);
+                
+                const response = await fetch(proxyUrl, {
+                    headers: {
+                        'User-Agent': 'RedditTix:v1.0.0 (by /u/RedditTix)'
+                    }
+                });
 
-        if (!response.ok) {
-            throw new Error(`Proxy HTTP ${response.status}`);
+                if (!response.ok) {
+                    console.warn(`❌ Proxy failed: ${response.status}`);
+                    continue;
+                }
+
+                const data = await response.json();
+                const post = this.processRedditResponse(data, subreddit);
+                
+                if (post) {
+                    console.log(`✅ Post récupéré via ${proxyUrl.split('/')[2]}`);
+                    return post;
+                }
+            } catch (error) {
+                console.warn(`❌ Erreur proxy ${proxyUrl.split('/')[2]}:`, error.message);
+                continue;
+            }
         }
 
-        const data = await response.json();
-        return this.processRedditResponse(data, subreddit);
+        throw new Error('Tous les proxies ont échoué');
     }
 
     /**

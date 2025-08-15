@@ -3,6 +3,7 @@
  */
 
 export default async function handler(req, res) {
+    console.log('🚀 API Reddit appelée:', req.method, req.url);
     // Configuration CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Reddit - RedditTix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .info { border-color: #17a2b8; background: #d1ecf1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test API Reddit - RedditTix</h1>
+        <p>Cette page permet de tester les différentes méthodes de récupération des posts Reddit.</p>
+        
+        <div>
+            <button onclick="testServerless()">🚀 Test Function Serverless</button>
+            <button onclick="testDirect()">🔗 Test Direct Reddit</button>
+            <button onclick="testProxy()">🔄 Test Proxy CORS</button>
+            <button onclick="clearResults()">🗑️ Effacer</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function addResult(type, title, content) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = `<strong>${title}</strong>\n${content}`;
+            resultsDiv.appendChild(resultDiv);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testServerless() {
+            addResult('info', '🚀 Test Function Serverless', 'Démarrage du test...');
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/api/reddit?subreddit=france');
+                const duration = Date.now() - startTime;
+                
+                addResult('info', '📡 Response Info', 
+                    `Status: ${response.status}\n` +
+                    `Duration: ${duration}ms\n` +
+                    `Headers: ${JSON.stringify([...response.headers.entries()], null, 2)}`
+                );
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    addResult('error', '❌ Erreur Response', 
+                        `Status: ${response.status}\n` +
+                        `Error: ${errorText}`
+                    );
+                    return;
+                }
+
+                const data = await response.json();
+                addResult('success', '✅ Succès Serverless', 
+                    `Titre: ${data.title}\n` +
+                    `Subreddit: r/${data.subreddit}\n` +
+                    `Auteur: u/${data.author}\n` +
+                    `Score: ${data.score}\n` +
+                    `Source: ${data.source}\n` +
+                    `URL: ${data.url}\n\n` +
+                    `Contenu (100 premiers chars):\n${data.content.substring(0, 100)}...`
+                );
+
+            } catch (error) {
+                addResult('error', '❌ Erreur Serverless', error.message);
+            }
+        }
+
+        async function testDirect() {
+            addResult('info', '🔗 Test Direct Reddit', 'Démarrage du test...');
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch('https://www.reddit.com/r/france/hot.json?limit=5');
+                const duration = Date.now() - startTime;
+
+                if (!response.ok) {
+                    addResult('error', '❌ Erreur Direct', `Status: ${response.status}`);
+                    return;
+                }
+
+                const data = await response.json();
+                addResult('success', '✅ Succès Direct', 
+                    `Posts trouvés: ${data.data.children.length}\n` +
+                    `Duration: ${duration}ms\n` +
+                    `Premier post: ${data.data.children[0]?.data?.title || 'N/A'}`
+                );
+
+            } catch (error) {
+                addResult('error', '❌ Erreur Direct (CORS attendu)', error.message);
+            }
+        }
+
+        async function testProxy() {
+            addResult('info', '🔄 Test Proxy CORS', 'Démarrage du test...');
+            
+            const proxies = [
+                'https://api.allorigins.win/raw?url=',
+                'https://cors-anywhere.herokuapp.com/',
+                'https://api.codetabs.com/v1/proxy?quest='
+            ];
+
+            for (const proxy of proxies) {
+                try {
+                    const startTime = Date.now();
+                    const proxyUrl = proxy + encodeURIComponent('https://www.reddit.com/r/france/hot.json?limit=5');
+                    const response = await fetch(proxyUrl);
+                    const duration = Date.now() - startTime;
+
+                    if (!response.ok) {
+                        addResult('error', `❌ Proxy ${proxy.split('/')[2]}`, `Status: ${response.status}`);
+                        continue;
+                    }
+
+                    const data = await response.json();
+                    addResult('success', `✅ Succès Proxy ${proxy.split('/')[2]}`, 
+                        `Posts: ${data.data?.children?.length || 'N/A'}\n` +
+                        `Duration: ${duration}ms`
+                    );
+                    break;
+
+                } catch (error) {
+                    addResult('error', `❌ Proxy ${proxy.split('/')[2]}`, error.message);
+                }
+            }
+        }
+
+        // Test automatique au chargement
+        window.addEventListener('load', () => {
+            addResult('info', '🎮 RedditTix API Tester', 
+                `Hostname: ${window.location.hostname}\n` +
+                `Origin: ${window.location.origin}\n` +
+                `User Agent: ${navigator.userAgent}\n\n` +
+                'Cliquez sur les boutons pour tester les différentes méthodes.'
+            );
+        });
+    </script>
+</body>
+</html>

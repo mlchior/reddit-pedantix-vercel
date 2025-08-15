@@ -81,14 +81,10 @@ class RedditAPI {
     async fetchViaServerless() {
         const subreddit = this.frenchSubreddits[Math.floor(Math.random() * this.frenchSubreddits.length)];
         
-        // Déterminer l'URL de base (local vs déployé)
-        const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? window.location.origin
-            : window.location.origin;
-            
-        const apiUrl = `${baseUrl}/api/reddit?subreddit=${subreddit}`;
+        const apiUrl = `/api/reddit?subreddit=${subreddit}`;
         
-        console.log(`🔄 Appel serverless: ${apiUrl}`);
+        console.log(`🔄 Appel serverless: ${window.location.origin}${apiUrl}`);
+        console.log(`🌐 Hostname: ${window.location.hostname}`);
 
         const response = await fetch(apiUrl, {
             method: 'GET',
@@ -97,17 +93,24 @@ class RedditAPI {
             }
         });
 
+        console.log(`📡 Response status: ${response.status}`);
+        console.log(`📡 Response headers:`, [...response.headers.entries()]);
+
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`❌ Error response: ${errorText}`);
+            
             if (response.status === 404) {
-                throw new Error('Aucun post français trouvé dans ce subreddit');
+                throw new Error(`API non trouvée: ${response.status} - ${errorText}`);
             }
-            throw new Error(`Serverless API error: ${response.status}`);
+            throw new Error(`Serverless API error: ${response.status} - ${errorText}`);
         }
 
         const post = await response.json();
+        console.log(`📦 Post reçu:`, post);
         
-        if (post.fallback) {
-            throw new Error('Fonction serverless en mode fallback');
+        if (post.error || post.fallback) {
+            throw new Error(post.error || 'Fonction serverless en mode fallback');
         }
 
         return post;

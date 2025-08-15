@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "dev": "vercel dev",
-    "build": "mkdir -p public && cp -r * public/ 2>/dev/null || true",
+    "build": "mkdir -p public && cp index.html public/ && cp -r js public/ 2>/dev/null || true",
     "start": "python3 -m http.server 3000"
   },
   "keywords": [

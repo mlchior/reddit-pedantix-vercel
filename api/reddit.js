@@ -1,9 +1,6 @@
-/**
- * Serverless function Vercel pour contourner CORS avec Reddit API
- */
+// Serverless function Vercel pour contourner CORS avec Reddit API
 
 export default async function handler(req, res) {
-    console.log('🚀 API Reddit appelée:', req.method, req.url);
     // Configuration CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -11,20 +8,16 @@ export default async function handler(req, res) {
 
     // Gestion des requêtes OPTIONS (preflight)
     if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
+        return res.status(200).end();
     }
 
     if (req.method !== 'GET') {
-        res.status(405).json({ error: 'Method not allowed' });
-        return;
+        return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
         const { subreddit = 'france' } = req.query;
         
-        console.log(`🔍 Récupération posts de r/${subreddit}`);
-
         // Appel à l'API Reddit depuis le serveur Vercel
         const redditUrl = `https://www.reddit.com/r/${subreddit}/hot.json?limit=25`;
         
@@ -53,11 +46,10 @@ export default async function handler(req, res) {
         });
 
         if (validPosts.length === 0) {
-            res.status(404).json({ 
+            return res.status(404).json({ 
                 error: 'No valid French posts found',
                 subreddit: subreddit 
             });
-            return;
         }
 
         // Sélectionner un post aléatoire
@@ -75,14 +67,10 @@ export default async function handler(req, res) {
             source: 'reddit'
         };
 
-        console.log(`✅ Post Reddit récupéré: ${formattedPost.title.substring(0, 50)}...`);
-
-        res.status(200).json(formattedPost);
+        return res.status(200).json(formattedPost);
 
     } catch (error) {
-        console.error('❌ Erreur API Reddit:', error.message);
-        
-        res.status(500).json({ 
+        return res.status(500).json({ 
             error: 'Failed to fetch Reddit post',
             message: error.message,
             fallback: true
@@ -90,9 +78,7 @@ export default async function handler(req, res) {
     }
 }
 
-/**
- * Détection basique de contenu français
- */
+// Détection basique de contenu français
 function containsFrenchWords(text) {
     const frenchIndicators = [
         'le ', 'la ', 'les ', 'un ', 'une ', 'des ',

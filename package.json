@@ -1,0 +1,23 @@
+{
+  "name": "reddit-pedantix-vercel",
+  "version": "1.0.0",
+  "description": "RedditTix - Jeu Pedantix avec vrais posts Reddit français (Version Vercel)",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build needed'",
+    "start": "python3 -m http.server 3000"
+  },
+  "keywords": [
+    "pedantix",
+    "reddit",
+    "jeu",
+    "français",
+    "vercel"
+  ],
+  "author": "RedditTix Team",
+  "license": "MIT",
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  }
+}

@@ -330,7 +330,7 @@ class GameLogic {
 
         if (source === 'reddit') {
             statusIndicator.className = 'status-indicator status-reddit';
-            statusIndicator.textContent = '✅ Post Reddit authentique récupéré en temps réel';
+            statusIndicator.textContent = '✅ Post Reddit authentique sélectionné aléatoirement';
         } else {
             statusIndicator.className = 'status-indicator status-fallback';
             statusIndicator.textContent = '⚠️ Post de démonstration (API Reddit indisponible)';

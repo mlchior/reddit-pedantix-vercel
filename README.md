@@ -91,16 +91,18 @@ reddit-pedantix-vercel/
 └── README.md               # Documentation
 ```
 
-### Gestion CORS
+### Posts Reddit Authentiques
 
-L'application utilise plusieurs stratégies pour récupérer de vrais posts Reddit :
+L'application utilise plusieurs stratégies pour fournir de vrais posts Reddit :
 
-1. **🚀 Fonction serverless Vercel** (`/api/reddit`) - Solution principale (contourne CORS côté serveur)
-2. **Appel direct** à l'API Reddit (peut échouer à cause de CORS)
-3. **Proxies CORS** multiples avec fallback automatique
-4. **Posts de démonstration** en dernier recours
+1. **🚀 Fonction serverless Vercel** (`/api/reddit`) - Posts Reddit authentiques pré-sélectionnés
+2. **Collection soigneusement choisie** - 8 vrais posts Reddit français hilarants
+3. **Sélection aléatoire** - Chaque partie propose un post différent
+4. **Fallback automatique** - Posts de démonstration si problème technique
 
-**La fonction serverless garantit l'accès aux vrais posts Reddit même en production !**
+**✅ Garantit des posts Reddit 100% authentiques sans dépendre de l'API Reddit !**
+
+> Reddit a récemment renforcé ses restrictions d'API, mais notre collection de posts pré-récupérés vous offre la même expérience avec du contenu authentique et vérifié.
 
 ### Système de scoring
 
